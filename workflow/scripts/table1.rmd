@@ -1,0 +1,90 @@
+---
+title: "Table1"
+output: html_document
+date: "2025-02-11"
+---
+```{r}
+library(gt)
+library(gtsummary)
+library(readr)
+library(dplyr)
+library(broom)
+library(tidyverse)
+library(data.table)
+```
+```{r}
+
+setwd("C:/Users/sweat/OneDrive/Documents/Internship")
+getwd()
+
+csv_dir <- "C:/Users/sweat/OneDrive/Documents/Internship/Data" 
+csv_files <- list.files(path = csv_dir, full.names = TRUE)
+print(csv_files)
+
+# Read, merge, and keep only selected columns
+table_1_baseline_features <- csv_files %>%
+  lapply(read_csv) %>%   # Read all CSV files
+  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black) %>%
+  bind_rows()  # Bind all rows together into one data frame
+
+# Check the first few rows of the data
+head(table_1_baseline_features)
+
+# Function to create a new race column based on conditions
+create_new_race_column <- function(table_1_baseline_features) {
+  
+  # Ensure the relevant columns are numeric (if they are not, convert them)
+  table_1_baseline_features$ID_Hispanic <- as.numeric(table_1_baseline_features$ID_Hispanic)
+  table_1_baseline_features$ID_Race_Black <- as.numeric(table_1_baseline_features$ID_Race_Black)
+  table_1_baseline_features$ID_Race_White <- as.numeric(table_1_baseline_features$ID_Race_White)
+  
+  # Print the column names to check before applying changes
+  print("Columns before mutate and select:")
+  print(names(table_1_baseline_features))
+  
+  # Create a new column 'Race' based on conditions from the other columns
+  table_1_baseline_features <- table_1_baseline_features %>%
+    mutate(Race = case_when(
+      ID_Hispanic == 1 & ID_Race_Black == 0 & ID_Race_White == 0 ~ "Hispanic",
+      ID_Race_Black == 1 ~ "Black",
+      ID_Race_White == 1 & ID_Hispanic == 0 & ID_Race_Black == 0 ~ "Other",  # Non-Hispanic White
+      ID_Race_White == 1 & ID_Hispanic == 1 & ID_Race_Black == 0 ~ "Hispanic",  # Hispanic gets priority if both are 1
+      TRUE ~ "NHW"  # Default case if none of the conditions match
+    )) %>%
+    # Remove original columns
+    select(-ID_Hispanic, -ID_Race_Black, -ID_Race_White)
+  
+  # Print column names after mutate and select to verify removal
+  print("Columns after mutate and select:")
+  print(names(table_1_baseline_features))
+  
+  # Return the modified dataframe with the 'Race' column and without the original columns
+  return(table_1_baseline_features)
+}
+
+# Call the function to create the 'Race' column
+table_1_baseline_features <- create_new_race_column(table_1_baseline_features)
+
+# Check the result
+head(table_1_baseline_features)
+
+
+#put all of the data into a table 
+table_1_baseline_features %>%
+  group_by(Race) %>%
+  summarise(
+    n = n(), 
+    mean_Race = mean(Race),
+    sd_Race = sd(Race),
+    
+  ) %>%
+  t()
+
+table_1_baseline_features %>% 
+  tbl_summary(by = Race, statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} / {N} ({p}%)"
+  ))
+```
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
