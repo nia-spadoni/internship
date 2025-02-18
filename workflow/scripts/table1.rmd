@@ -86,5 +86,3 @@ table_1_baseline_features %>%
       all_categorical() ~ "{n} / {N} ({p}%)"
   ))
 ```
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
