@@ -1,4 +1,3 @@
----
 title: "Table1"
 output: html_document
 date: "2025-02-11"
@@ -11,6 +10,8 @@ library(dplyr)
 library(broom)
 library(tidyverse)
 library(data.table)
+library(cardx)
+library("correlation")
 ```
 ```{r}
 
@@ -24,11 +25,12 @@ print(csv_files)
 # Read, merge, and keep only selected columns
 table_1_baseline_features <- csv_files %>%
   lapply(read_csv) %>%   # Read all CSV files
-  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black) %>%
+  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total ) %>%
   bind_rows()  # Bind all rows together into one data frame
 
 # Check the first few rows of the data
 head(table_1_baseline_features)
+
 
 # Function to create a new race column based on conditions
 create_new_race_column <- function(table_1_baseline_features) {
@@ -51,14 +53,15 @@ create_new_race_column <- function(table_1_baseline_features) {
       ID_Race_White == 1 & ID_Hispanic == 1 & ID_Race_Black == 0 ~ "Hispanic",  # Hispanic gets priority if both are 1
       TRUE ~ "NHW"  # Default case if none of the conditions match
     )) %>%
-    # Remove original columns
+    
     select(-ID_Hispanic, -ID_Race_Black, -ID_Race_White)
   
+    
   # Print column names after mutate and select to verify removal
   print("Columns after mutate and select:")
   print(names(table_1_baseline_features))
   
-  # Return the modified dataframe with the 'Race' column and without the original columns
+  # Return the modified data frame with the 'Race' column and without the original columns
   return(table_1_baseline_features)
 }
 
@@ -66,23 +69,74 @@ create_new_race_column <- function(table_1_baseline_features) {
 table_1_baseline_features <- create_new_race_column(table_1_baseline_features)
 
 # Check the result
-head(table_1_baseline_features)
+print(table_1_baseline_features)
 
+# Ensure variables are numeric, then replace negative values with NA
+table_1_baseline_features_clean <- table_1_baseline_features %>%
+  mutate(
+    AUDIT_Total = if_else(AUDIT_Total > 40, 40, AUDIT_Total),
+    BW_CholTotal = as.numeric(BW_CholTotal),
+    CDX_Depression = as.numeric(CDX_Depression),
+    CDX_Hypertension = as.numeric(CDX_Hypertension),
+    CDX_Diabetes = as.numeric(CDX_Diabetes),
+    IMH_TBI = as.numeric(IMH_TBI)
+    ) %>%
+  mutate(BW_CholTotal = if_else(BW_CholTotal < 0, NA_real_, BW_CholTotal)) %>%
+  mutate(CDX_Depression = if_else(CDX_Depression < 0, NA_real_, CDX_Depression)) %>%
+  mutate(CDX_Hypertension = if_else(CDX_Hypertension < 0, NA_real_, CDX_Hypertension)) %>%   
+  mutate(CDX_Diabetes = if_else(CDX_Diabetes < 0, NA_real_, CDX_Diabetes)) %>%
+  mutate(IMH_TBI = if_else(IMH_TBI < 0, NA_real_, IMH_TBI)) %>%
+ filter(
+    AUDIT_Total != -9999,
+    OM_BMI > 0 & OM_BMI != -9999,  
+    CDX_Depression >= 0,            
+    CDX_Diabetes >= 0,              
+    CDX_Hypertension >= 0,  
+    BW_CholTotal >= 0,      
+    IMH_TBI >= 0,
+    !is.na(BW_CholTotal) & 
+    !is.na(CDX_Hypertension) & 
+    !is.na(CDX_Diabetes) & 
+    !is.na(CDX_Depression) &
+    !is.na(IMH_TBI) 
+  )
 
-#put all of the data into a table 
-table_1_baseline_features %>%
+print(names(table_1_baseline_features_clean))
+
+table_1_baseline_features_clean %>%
   group_by(Race) %>%
   summarise(
     n = n(), 
-    mean_Race = mean(Race),
-    sd_Race = sd(Race),
+    mean_race = mean(Race),
+    sd_race = sd(Race),
+    mean_col = mean(BW_CholTotal),
+    sd_chol = sd(BW_CholTotal),
+    mean_depression = mean(CDX_Depression),
+    sd_depression = sd(CDX_Depression),
+    mean_bp = mean(CDX_Hypertension),
+    sd_bp = sd(CDX_Hypertension),
+    mean_diabetes = mean(CDX_Diabetes),
+    sd_diabetes = sd(CDX_Diabetes),
+    mean_bmi = mean(OM_BMI),
+    sd_bmi = sd(OM_BMI),
+    mean_tbi = mean(IMH_TBI),
+    sd_tbi = sd(IMH_TBI),
+    mean_alcohol = mean(AUDIT_Total),
+    sd_alcohol = sd(AUDIT_Total)
     
   ) %>%
   t()
 
-table_1_baseline_features %>% 
+table_1_baseline_features_clean %>% 
   tbl_summary(by = Race, statistic = list(
       all_continuous() ~ "{mean} ({sd})",
       all_categorical() ~ "{n} / {N} ({p}%)"
-  ))
+  )) %>%
+  add_p()
+
 ```
+
+
+
+```
+
