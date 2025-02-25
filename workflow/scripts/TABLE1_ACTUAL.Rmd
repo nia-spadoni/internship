@@ -25,7 +25,7 @@ print(csv_files)
 # Read, merge, and keep only selected columns
 table_1_baseline_features <- csv_files %>%
   lapply(read_csv) %>%   # Read all CSV files
-  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total ) %>%
+  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total, Smoke_Currently, Smoke_Ever ) %>%
   bind_rows()  # Bind all rows together into one data frame
 
 # Check the first few rows of the data
@@ -86,19 +86,22 @@ table_1_baseline_features_clean <- table_1_baseline_features %>%
   mutate(CDX_Hypertension = if_else(CDX_Hypertension < 0, NA_real_, CDX_Hypertension)) %>%   
   mutate(CDX_Diabetes = if_else(CDX_Diabetes < 0, NA_real_, CDX_Diabetes)) %>%
   mutate(IMH_TBI = if_else(IMH_TBI < 0, NA_real_, IMH_TBI)) %>%
+  mutate(Smoke_Ever = if_else(Smoke_Ever < 0, NA_real_, Smoke_Ever)) %>%
  filter(
     AUDIT_Total != -9999,
-    OM_BMI > 0 & OM_BMI != -9999,  
+    OM_BMI > 0 & OM_BMI != -9999, 
     CDX_Depression >= 0,            
     CDX_Diabetes >= 0,              
     CDX_Hypertension >= 0,  
     BW_CholTotal >= 0,      
     IMH_TBI >= 0,
+    Smoke_Ever >= 0,
     !is.na(BW_CholTotal) & 
     !is.na(CDX_Hypertension) & 
     !is.na(CDX_Diabetes) & 
     !is.na(CDX_Depression) &
-    !is.na(IMH_TBI) 
+    !is.na(IMH_TBI) &
+    !is.na(Smoke_Ever)
   )
 
 print(names(table_1_baseline_features_clean))
@@ -123,7 +126,7 @@ table_1_baseline_features_clean %>%
     sd_tbi = sd(IMH_TBI),
     mean_alcohol = mean(AUDIT_Total),
     sd_alcohol = sd(AUDIT_Total)
-    
+
   ) %>%
   t()
 
