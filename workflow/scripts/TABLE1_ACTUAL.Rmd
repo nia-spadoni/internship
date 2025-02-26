@@ -79,7 +79,8 @@ table_1_baseline_features_clean <- table_1_baseline_features %>%
     CDX_Depression = as.numeric(CDX_Depression),
     CDX_Hypertension = as.numeric(CDX_Hypertension),
     CDX_Diabetes = as.numeric(CDX_Diabetes),
-    IMH_TBI = as.numeric(IMH_TBI)
+    IMH_TBI = as.numeric(IMH_TBI),
+    Smoke_Ever = as.numeric(Smoke_Ever)
     ) %>%
   mutate(BW_CholTotal = if_else(BW_CholTotal < 0, NA_real_, BW_CholTotal)) %>%
   mutate(CDX_Depression = if_else(CDX_Depression < 0, NA_real_, CDX_Depression)) %>%
