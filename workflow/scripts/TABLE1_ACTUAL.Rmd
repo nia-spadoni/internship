@@ -1,7 +1,5 @@
-title: "Table1"
-output: html_document
-date: "2025-02-11"
----
+title: "Table1" output: html_document date: "2025-02-11" ---
+
 ```{r}
 library(gt)
 library(gtsummary)
@@ -12,25 +10,80 @@ library(tidyverse)
 library(data.table)
 library(cardx)
 library("correlation")
-```
-```{r}
-
 setwd("C:/Users/sweat/OneDrive/Documents/Intern")
 getwd()
+```
+
+## importing data sets
+
+```{r}
+
+
 
 csv_dir <- "C:/Users/sweat/OneDrive/Documents/Intern/Data" 
 csv_files <- list.files(path = csv_dir, full.names = TRUE)
 print(csv_files)
 
 # Read, merge, and keep only selected columns
-table_1_baseline_features <- csv_files %>%
+habs.raw <- csv_files %>%
   lapply(read_csv) %>%   # Read all CSV files
-  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total, Smoke_Currently, Smoke_Ever ) %>%
+  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total, Smoke_Currently, Smoke_Ever, Visual_1, Visual_3 ) %>%
   bind_rows()  # Bind all rows together into one data frame
 
 # Check the first few rows of the data
-head(table_1_baseline_features)
+head(habs.raw)
+```
+## wrangling
+```{r}
+habs <- habs.raw %>%
+  mutate(
+    ID_Hispanic = as.numeric(ID_Hispanic),
+    ID_Race_Black = as.numeric(ID_Race_Black),
+    ID_Race_White = as.numeric(ID_Race_White),
+    Visual_1 = as.numeric(Visual_1),
+    Visual_3 = as.numeric(Visual_3),
+    BW_CholTotal = as.numeric(BW_CholTotal),
+    CDX_Depression = as.numeric(CDX_Depression),
+    CDX_Hypertension = as.numeric(CDX_Hypertension),
+    CDX_Diabetes = as.numeric(CDX_Diabetes),
+    IMH_TBI = as.numeric(IMH_TBI),
+    Smoke_Ever = as.numeric(Smoke_Ever),
+    Smoke_Currently = as.numeric(Smoke_Currently)
+  ) 
 
+```
+
+
+
+### new variables
+```{r}
+habsdf <- habs %>%
+   mutate(Race = case_when(
+      ID_Hispanic == 1 & ID_Race_Black == 0 & ID_Race_White == 0 ~ "Hispanic",
+      ID_Race_Black == 1 ~ "Black",
+      ID_Race_White == 1 & ID_Hispanic == 0 & ID_Race_Black == 0 ~ "Other",  
+      ID_Race_White == 1 & ID_Hispanic == 1 & ID_Race_Black == 0 ~ "Hispanic", 
+      TRUE ~ "NHW" 
+    )) %>%
+   mutate(Smoke = case_when(
+      Smoke_Currently == 1 & Smoke_Ever == 1 ~ "Smoker",  
+      Smoke_Currently == 0 & Smoke_Ever == 1 ~ "Smoker",  
+      Smoke_Currently == 0 & Smoke_Ever == 0 ~ "Never Smoked",  
+      Smoke_Currently == 1 & is.na(Smoke_Ever) ~ "Smoker",  
+      TRUE ~ "Unknown"  
+    )) %>%
+  mutate(Vision_Loss = case_when(
+    Visual_1 == 1 & Visual_3 >= 2 ~ "Vision Loss",
+    Visual_1 == 0 & Visual_3 == 1 ~ "No Vision Loss",  
+    TRUE ~ "Unknown"   
+  ))
+
+
+```
+
+
+### Race variable creation
+```{r}
 
 # Function to create a new race column based on conditions
 create_new_race_column <- function(table_1_baseline_features) {
@@ -70,8 +123,9 @@ table_1_baseline_features <- create_new_race_column(table_1_baseline_features)
 
 # Check the result
 print(table_1_baseline_features)
-
+```
 #Create new Smoke" column
+```{r}
 create_new_smoke_column <- function(table_1_baseline_features) {
   
   # Ensure the relevant columns are numeric (if they are not, convert them)
@@ -109,7 +163,6 @@ create_new_smoke_column <- function(table_1_baseline_features) {
   print("Columns after mutate and select:")
   print(names(table_1_baseline_features))
   
- 
   mean_smoke <- mean(table_1_baseline_features$Smoke_numeric, na.rm = TRUE)
   sd_smoke <- sd(table_1_baseline_features$Smoke_numeric, na.rm = TRUE)
   print(paste("Mean of Smoke numeric: ", mean_smoke))
@@ -121,22 +174,46 @@ create_new_smoke_column <- function(table_1_baseline_features) {
 
 # View the result
 print(head(table_1_baseline_features_clean))
-
-# Call the function to create the 'Smoke' column
 table_1_baseline_features <- create_new_smoke_column(table_1_baseline_features)
+print(head(table_1_baseline_features))
+```
+create_new_visionloss_column <- function(table_1_baseline_features) {
+  
 
-# Check the result
+  table_1_baseline_features$Visual_1 <- as.numeric(table_1_baseline_features$Visual_1)
+  table_1_baseline_features$Visual_3 <- as.numeric(table_1_baseline_features$Visual_3)
+  
+  # Create new "Vision Loss" column
+  table_1_baseline_features <- table_1_baseline_features %>%
+    mutate(Vision_Loss = case_when(
+      Visual_1 == 1 & Visual_3 >= 2 ~ "Vision Loss", 
+      Visual_1 == 0 & Visual_3 = 1 ~ "No Vision Loss"
+      TRUE ~ "Unknown"  
+    )) %>%
+    select(-Visual_1, -Visual_3)
+
+  table_1_baseline_features <- table_1_baseline_features %>%
+    filter(Vision_Loss != "Unknown")
+  
+  print(head(table_1_baseline_features))
+  
+  return(table_1_baseline_features)
+}
+
+table_1_baseline_features <- create_new_visionloss_column(table_1_baseline_features)
+
 print(head(table_1_baseline_features))
 
+```{r}
 # Ensure variables are numeric, then replace negative values with NA
 table_1_baseline_features_clean <- table_1_baseline_features %>%
   mutate(
-    AUDIT_Total = if_else(AUDIT_Total > 40, 40, AUDIT_Total),
+    AUDIT_cat = if_else(AUDIT_Total > 40, 40, AUDIT_Total),
     BW_CholTotal = as.numeric(BW_CholTotal),
     CDX_Depression = as.numeric(CDX_Depression),
     CDX_Hypertension = as.numeric(CDX_Hypertension),
     CDX_Diabetes = as.numeric(CDX_Diabetes),
-    IMH_TBI = as.numeric(IMH_TBI)
+    IMH_TBI = as.numeric(IMH_TBI),
     ) %>%
   mutate(BW_CholTotal = if_else(BW_CholTotal < 0, NA_real_, BW_CholTotal)) %>%
   mutate(CDX_Depression = if_else(CDX_Depression < 0, NA_real_, CDX_Depression)) %>%
@@ -155,11 +232,13 @@ table_1_baseline_features_clean <- table_1_baseline_features %>%
     !is.na(CDX_Hypertension) & 
     !is.na(CDX_Diabetes) & 
     !is.na(CDX_Depression) &
-    !is.na(IMH_TBI) 
+    !is.na(IMH_TBI)
   )
 
-print(names(table_1_baseline_features_clean))
-
+print(table_1_baseline_features_clean)
+```
+### Calculating mean and sd
+```{r}
 table_1_baseline_features_clean %>%
   group_by(Race) %>%
   summarise(
@@ -182,6 +261,10 @@ table_1_baseline_features_clean %>%
     sd_alcohol = sd(AUDIT_Total)
 
   ) %>%
+```
+### table 
+```{r}
+
   t()
 
 table_1_baseline_features_clean %>% 
@@ -193,7 +276,4 @@ table_1_baseline_features_clean %>%
 
 ```
 
-
-
-```
 
