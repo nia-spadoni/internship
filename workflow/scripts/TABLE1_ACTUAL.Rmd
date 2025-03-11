@@ -27,7 +27,7 @@ print(csv_files)
 # Read, merge, and keep only selected columns
 habs.raw <- csv_files %>%
   lapply(read_csv) %>%   # Read all CSV files
-  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total, Smoke_Currently, Smoke_Ever, Visual_1, Visual_3 ) %>%
+  lapply(select, Med_ID, Age, ID_Gender, ID_Education, ID_Hispanic, ID_Race_White, ID_Race_Black, BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total, Smoke_Currently, Smoke_Ever, Visual_1, Visual_3, Auditory_1, Auditory_2, Auditory_3, RAPA_1_Total, RAPA_2_Total, SocialSupport_Total) %>%
   bind_rows()  # Bind all rows together into one data frame
 
 # Check the first few rows of the data
@@ -48,7 +48,13 @@ habs <- habs.raw %>%
     CDX_Diabetes = as.numeric(CDX_Diabetes),
     IMH_TBI = as.numeric(IMH_TBI),
     Smoke_Ever = as.numeric(Smoke_Ever),
-    Smoke_Currently = as.numeric(Smoke_Currently)
+    Smoke_Currently = as.numeric(Smoke_Currently),
+    Auditory_1 = as.numeric(Auditory_1),
+    Auditory_2 = as.numeric(Auditory_2),
+    Auditory_3 = as.numeric(Auditory_3),
+    RAPA_1_Total = as.numeric(RAPA_1_Total),
+    RAPA_2_Total = as.numeric(RAPA_2_Total),
+    SocialSupport_Total = as.numeric(SocialSupport_Total)
   ) 
 print(habs)
 ```
@@ -76,15 +82,24 @@ habsdf <- habs %>%
     Visual_1 == 1 & Visual_3 >= 2 ~ "Vision Loss",
     Visual_1 == 0 & Visual_3 == 1 ~ "No Vision Loss",  
     TRUE ~ NA   
+  )) %>%
+  mutate(Hearing_Loss = case_when(
+    Auditory_1 == 1 & Auditory_2 == 1 & (Auditory_3 == 3 | Auditory_3 == 4) ~ "Hearing Loss",
+    Auditory_1 == 0 & Auditory_2 == 0 & (Auditory_3 == 2 | Auditory_3 == 1) ~ "No Hearing Loss",
+    TRUE ~ NA
   ))
+print(habsdf)
+```
+### Remove unwanted columns
+```{r}
 
 clean_habsdf <- habsdf %>%
 select(
-  -Smoke_Currently, -Smoke_Ever, -Visual_1, -Visual_3, -ID_Race_Black, -ID_Hispanic, -ID_Race_White
+  -Smoke_Currently, -Smoke_Ever, -Visual_1, -Visual_3, -ID_Race_Black, -ID_Hispanic, -ID_Race_White, -Auditory_1, -Auditory_2, -Auditory_3
 )
 print(clean_habsdf)
 ```
-### Change -9999 -> NA
+### Filtering
 ```{r}
 filter_habs <- clean_habsdf %>%
   filter(
@@ -95,15 +110,21 @@ filter_habs <- clean_habsdf %>%
     CDX_Hypertension >= 0,  
     BW_CholTotal >= 0,      
     IMH_TBI >= 0,
+    RAPA_1_Total >= 0,
+    RAPA_2_Total >= 0,
+    SocialSupport_Total >= 0,
     !is.na(BW_CholTotal) & 
     !is.na(CDX_Hypertension) & 
     !is.na(CDX_Diabetes) & 
     !is.na(CDX_Depression) &
-    !is.na(IMH_TBI)
+    !is.na(IMH_TBI) &
+    !is.na(RAPA_1_Total) &
+    !is.na(RAPA_2_Total) &
+    !is.na(SocialSupport_Total)
   )
 print(filter_habs)
 ```
-### Filtering 
+### Calculate mean and sd 
 ```{r}
 filter_habs %>%
   group_by(Race) %>%
@@ -122,13 +143,17 @@ filter_habs %>%
     mean_tbi = mean(IMH_TBI, na.rm = TRUE),
     sd_tbi = sd(IMH_TBI, na.rm = TRUE),
     mean_alcohol = mean(AUDIT_Total, na.rm = TRUE),
-    sd_alcohol = sd(AUDIT_Total, na.rm = TRUE)
+    sd_alcohol = sd(AUDIT_Total, na.rm = TRUE),
+    mean_RAPA_1 = mean(RAPA_1_Total, na.rm = TRUE),
+    sd_RAPA_1 = sd(RAPA_1_Total, na.rm = TRUE),
+    mean_RAPA_2 = mean(RAPA_2_Total, na.rm = TRUE),
+    sd_RAPA_2 = sd(RAPA_2_Total, na.rm = TRUE),
+    mean_socialsupp = mean(SocialSupport_Total, na.rm = TRUE),
+    sd_socialsupp = sd(SocialSupport_Total, na.rm = TRUE)
   )
 ```
 ### Table
 ```{r}
-
-
 filter_habs %>% 
   select(-Med_ID) %>%
   tbl_summary(by = Race, statistic = list( 
@@ -136,8 +161,5 @@ filter_habs %>%
       all_categorical() ~ "{n} / {N} ({p}%)"
   )) %>%
   add_p()
-
-
-
 ```
 
