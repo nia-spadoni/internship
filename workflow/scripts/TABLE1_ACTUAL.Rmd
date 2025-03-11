@@ -17,9 +17,6 @@ getwd()
 ## importing data sets
 
 ```{r}
-
-
-
 csv_dir <- "C:/Users/sweat/OneDrive/Documents/Intern/Data" 
 csv_files <- list.files(path = csv_dir, full.names = TRUE)
 print(csv_files)

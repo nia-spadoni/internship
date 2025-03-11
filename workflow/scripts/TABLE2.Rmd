@@ -1,0 +1,27 @@
+---
+title: "Table2"
+output: html_document
+date: "2025-03-11"
+---
+```{r}
+library(gt)
+library(gtsummary)
+library(readr)
+library(dplyr)
+library(broom)
+library(tidyverse)
+library(data.table)
+library(cardx)
+library("correlation")
+setwd("C:/Users/sweat/OneDrive/Documents/Intern")
+getwd()
+```
+```{r}
+csv_dir <- "C:\Users\sweat\OneDrive\Documents\Intern\Data\HABSHD-PGS-Scores-selected" 
+csv_files <- list.files(path = csv_dir, full.names = TRUE)
+# Read, merge, and keep only selected columns
+habs.raw <- csv_files %>%
+  lapply(read_csv) %>%   # Read all CSV files
+  lapply(select,) %>%
+  bind_rows()  # Bind all rows together into one data frame
+```
