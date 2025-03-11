@@ -50,7 +50,7 @@ habs <- habs.raw %>%
     Smoke_Ever = as.numeric(Smoke_Ever),
     Smoke_Currently = as.numeric(Smoke_Currently)
   ) 
-
+print(habs)
 ```
 
 
@@ -70,157 +70,24 @@ habsdf <- habs %>%
       Smoke_Currently == 0 & Smoke_Ever == 1 ~ "Smoker",  
       Smoke_Currently == 0 & Smoke_Ever == 0 ~ "Never Smoked",  
       Smoke_Currently == 1 & is.na(Smoke_Ever) ~ "Smoker",  
-      TRUE ~ "Unknown"  
+      TRUE ~ NA
     )) %>%
   mutate(Vision_Loss = case_when(
     Visual_1 == 1 & Visual_3 >= 2 ~ "Vision Loss",
     Visual_1 == 0 & Visual_3 == 1 ~ "No Vision Loss",  
-    TRUE ~ "Unknown"   
+    TRUE ~ NA   
   ))
 
-
+clean_habsdf <- habsdf %>%
+select(
+  -Smoke_Currently, -Smoke_Ever, -Visual_1, -Visual_3, -ID_Race_Black, -ID_Hispanic, -ID_Race_White
+)
+print(clean_habsdf)
 ```
-
-
-### Race variable creation
+### Change -9999 -> NA
 ```{r}
-
-# Function to create a new race column based on conditions
-create_new_race_column <- function(table_1_baseline_features) {
-  
-  # Ensure the relevant columns are numeric (if they are not, convert them)
-  table_1_baseline_features$ID_Hispanic <- as.numeric(table_1_baseline_features$ID_Hispanic)
-  table_1_baseline_features$ID_Race_Black <- as.numeric(table_1_baseline_features$ID_Race_Black)
-  table_1_baseline_features$ID_Race_White <- as.numeric(table_1_baseline_features$ID_Race_White)
-  
-  # Print the column names to check before applying changes
-  print("Columns before mutate and select:")
-  print(names(table_1_baseline_features))
-  
-  # Create a new column 'Race' based on conditions from the other columns
-  table_1_baseline_features <- table_1_baseline_features %>%
-    mutate(Race = case_when(
-      ID_Hispanic == 1 & ID_Race_Black == 0 & ID_Race_White == 0 ~ "Hispanic",
-      ID_Race_Black == 1 ~ "Black",
-      ID_Race_White == 1 & ID_Hispanic == 0 & ID_Race_Black == 0 ~ "Other",  # Non-Hispanic White
-      ID_Race_White == 1 & ID_Hispanic == 1 & ID_Race_Black == 0 ~ "Hispanic",  # Hispanic gets priority if both are 1
-      TRUE ~ "NHW"  # Default case if none of the conditions match
-    )) %>%
-    
-    select(-ID_Hispanic, -ID_Race_Black, -ID_Race_White)
-  
-    
-  # Print column names after mutate and select to verify removal
-  print("Columns after mutate and select:")
-  print(names(table_1_baseline_features))
-  
-  # Return the modified data frame with the 'Race' column and without the original columns
-  return(table_1_baseline_features)
-}
-
-# Call the function to create the 'Race' column
-table_1_baseline_features <- create_new_race_column(table_1_baseline_features)
-
-# Check the result
-print(table_1_baseline_features)
-```
-#Create new Smoke" column
-```{r}
-create_new_smoke_column <- function(table_1_baseline_features) {
-  
-  # Ensure the relevant columns are numeric (if they are not, convert them)
-  table_1_baseline_features$Smoke_Ever <- as.numeric(table_1_baseline_features$Smoke_Ever)
-  table_1_baseline_features$Smoke_Currently <- as.numeric(table_1_baseline_features$Smoke_Currently)
-  
-  # Create a new column 'Smoke' based on conditions from the other columns
-  table_1_baseline_features <- table_1_baseline_features %>%
-    mutate(Smoke = case_when(
-      Smoke_Currently == 1 & Smoke_Ever == 1 ~ "Smoker",  
-      Smoke_Currently == 0 & Smoke_Ever == 1 ~ "Smoker",  
-      Smoke_Currently == 0 & Smoke_Ever == 0 ~ "Never Smoked",  
-      Smoke_Currently == 1 & is.na(Smoke_Ever) ~ "Smoke",  
-      
-      TRUE ~ "Unknown"  
-    )) %>%
-    
-    # Create 'Smoke_numeric' for calculations
-    mutate(Smoke_numeric = case_when(
-      Smoke == "Smoke" ~ 1,         
-      Smoke == "Smoke" ~ 2,     
-      Smoke == "Never Smoke" ~ 3,      
-      TRUE ~ NA_real_                 
-    ))
-  
-  table_1_baseline_features <- table_1_baseline_features %>%
-    filter(Smoke != "Unknown") %>% 
-    filter(Smoke_Ever != -9999 & Smoke_Currently != -9999)
-
-  # Remove the original columns 'Smoke_Ever' and 'Smoke_Currently'
-  table_1_baseline_features <- table_1_baseline_features %>%
-    select(-Smoke_Ever, -Smoke_Currently, -Smoke_numeric)
-  
-  # Print column names after mutate and select to verify removal
-  print("Columns after mutate and select:")
-  print(names(table_1_baseline_features))
-  
-  mean_smoke <- mean(table_1_baseline_features$Smoke_numeric, na.rm = TRUE)
-  sd_smoke <- sd(table_1_baseline_features$Smoke_numeric, na.rm = TRUE)
-  print(paste("Mean of Smoke numeric: ", mean_smoke))
-  print(paste("Standard Deviation of Smoke numeric: ", sd_smoke))
-  
-  # Return the modified data frame with the 'Smoke' column and without the original columns
-  return(table_1_baseline_features)
-}
-
-# View the result
-print(head(table_1_baseline_features_clean))
-table_1_baseline_features <- create_new_smoke_column(table_1_baseline_features)
-print(head(table_1_baseline_features))
-```
-create_new_visionloss_column <- function(table_1_baseline_features) {
-  
-
-  table_1_baseline_features$Visual_1 <- as.numeric(table_1_baseline_features$Visual_1)
-  table_1_baseline_features$Visual_3 <- as.numeric(table_1_baseline_features$Visual_3)
-  
-  # Create new "Vision Loss" column
-  table_1_baseline_features <- table_1_baseline_features %>%
-    mutate(Vision_Loss = case_when(
-      Visual_1 == 1 & Visual_3 >= 2 ~ "Vision Loss", 
-      Visual_1 == 0 & Visual_3 = 1 ~ "No Vision Loss"
-      TRUE ~ "Unknown"  
-    )) %>%
-    select(-Visual_1, -Visual_3)
-
-  table_1_baseline_features <- table_1_baseline_features %>%
-    filter(Vision_Loss != "Unknown")
-  
-  print(head(table_1_baseline_features))
-  
-  return(table_1_baseline_features)
-}
-
-table_1_baseline_features <- create_new_visionloss_column(table_1_baseline_features)
-
-print(head(table_1_baseline_features))
-
-```{r}
-# Ensure variables are numeric, then replace negative values with NA
-table_1_baseline_features_clean <- table_1_baseline_features %>%
-  mutate(
-    AUDIT_cat = if_else(AUDIT_Total > 40, 40, AUDIT_Total),
-    BW_CholTotal = as.numeric(BW_CholTotal),
-    CDX_Depression = as.numeric(CDX_Depression),
-    CDX_Hypertension = as.numeric(CDX_Hypertension),
-    CDX_Diabetes = as.numeric(CDX_Diabetes),
-    IMH_TBI = as.numeric(IMH_TBI),
-    ) %>%
-  mutate(BW_CholTotal = if_else(BW_CholTotal < 0, NA_real_, BW_CholTotal)) %>%
-  mutate(CDX_Depression = if_else(CDX_Depression < 0, NA_real_, CDX_Depression)) %>%
-  mutate(CDX_Hypertension = if_else(CDX_Hypertension < 0, NA_real_, CDX_Hypertension)) %>%   
-  mutate(CDX_Diabetes = if_else(CDX_Diabetes < 0, NA_real_, CDX_Diabetes)) %>%
-  mutate(IMH_TBI = if_else(IMH_TBI < 0, NA_real_, IMH_TBI)) %>%
- filter(
+filter_habs <- clean_habsdf %>%
+  filter(
     AUDIT_Total != -9999,
     OM_BMI > 0 & OM_BMI != -9999, 
     CDX_Depression >= 0,            
@@ -234,46 +101,40 @@ table_1_baseline_features_clean <- table_1_baseline_features %>%
     !is.na(CDX_Depression) &
     !is.na(IMH_TBI)
   )
-
-print(table_1_baseline_features_clean)
+print(filter_habs)
 ```
-### Calculating mean and sd
 ```{r}
-table_1_baseline_features_clean %>%
+filter_habs %>%
   group_by(Race) %>%
   summarise(
     n = n(), 
-    mean_race = mean(Race),
-    sd_race = sd(Race),
-    mean_col = mean(BW_CholTotal),
-    sd_chol = sd(BW_CholTotal),
-    mean_depression = mean(CDX_Depression),
-    sd_depression = sd(CDX_Depression),
-    mean_bp = mean(CDX_Hypertension),
-    sd_bp = sd(CDX_Hypertension),
-    mean_diabetes = mean(CDX_Diabetes),
-    sd_diabetes = sd(CDX_Diabetes),
-    mean_bmi = mean(OM_BMI),
-    sd_bmi = sd(OM_BMI),
-    mean_tbi = mean(IMH_TBI),
-    sd_tbi = sd(IMH_TBI),
-    mean_alcohol = mean(AUDIT_Total),
-    sd_alcohol = sd(AUDIT_Total)
-
-  ) %>%
+    mean_col = mean(BW_CholTotal, na.rm = TRUE),
+    sd_chol = sd(BW_CholTotal, na.rm = TRUE),
+    mean_depression = mean(CDX_Depression, na.rm = TRUE),
+    sd_depression = sd(CDX_Depression, na.rm = TRUE),
+    mean_bp = mean(CDX_Hypertension, na.rm = TRUE),
+    sd_bp = sd(CDX_Hypertension, na.rm = TRUE),
+    mean_diabetes = mean(CDX_Diabetes, na.rm = TRUE),
+    sd_diabetes = sd(CDX_Diabetes, na.rm = TRUE),
+    mean_bmi = mean(OM_BMI, na.rm = TRUE),
+    sd_bmi = sd(OM_BMI, na.rm = TRUE),
+    mean_tbi = mean(IMH_TBI, na.rm = TRUE),
+    sd_tbi = sd(IMH_TBI, na.rm = TRUE),
+    mean_alcohol = mean(AUDIT_Total, na.rm = TRUE),
+    sd_alcohol = sd(AUDIT_Total, na.rm = TRUE)
+  )
 ```
-### table 
 ```{r}
 
-  t()
 
-table_1_baseline_features_clean %>% 
+filter_habs %>% 
   tbl_summary(by = Race, statistic = list(
       all_continuous() ~ "{mean} ({sd})",
       all_categorical() ~ "{n} / {N} ({p}%)"
   )) %>%
   add_p()
 
-```
 
+
+```
 
