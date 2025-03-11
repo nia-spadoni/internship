@@ -55,7 +55,7 @@ print(habs)
 
 
 
-### new variables
+### Create new variables
 ```{r}
 habsdf <- habs %>%
    mutate(Race = case_when(
@@ -103,6 +103,7 @@ filter_habs <- clean_habsdf %>%
   )
 print(filter_habs)
 ```
+### Filtering 
 ```{r}
 filter_habs %>%
   group_by(Race) %>%
@@ -124,11 +125,13 @@ filter_habs %>%
     sd_alcohol = sd(AUDIT_Total, na.rm = TRUE)
   )
 ```
+### Table
 ```{r}
 
 
 filter_habs %>% 
-  tbl_summary(by = Race, statistic = list(
+  select(-Med_ID) %>%
+  tbl_summary(by = Race, statistic = list( 
       all_continuous() ~ "{mean} ({sd})",
       all_categorical() ~ "{n} / {N} ({p}%)"
   )) %>%
