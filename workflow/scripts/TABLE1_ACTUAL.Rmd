@@ -9,6 +9,8 @@ library(broom)
 library(tidyverse)
 library(data.table)
 library(cardx)
+library(ggplot2)
+library(corrplot)
 library("correlation")
 setwd("C:/Users/sweat/OneDrive/Documents/Intern")
 getwd()
@@ -84,7 +86,14 @@ habsdf <- habs %>%
     Auditory_1 == 1 & Auditory_2 == 1 & (Auditory_3 == 3 | Auditory_3 == 4) ~ "Hearing Loss",
     Auditory_1 == 0 & Auditory_2 == 0 & (Auditory_3 == 2 | Auditory_3 == 1) ~ "No Hearing Loss",
     TRUE ~ NA
-  ))
+  )) %>%
+  mutate(RAPA_1_Scores = ifelse(
+    RAPA_1_Total > 6, "High Score", "Low Score"
+    )) %>%
+  mutate(RAPA_2_Scores = ifelse(
+    RAPA_2_Total > 2, "High Score", "Low Score"
+    ))
+
 print(habsdf)
 ```
 ### Remove unwanted columns
@@ -107,9 +116,9 @@ filter_habs <- clean_habsdf %>%
     CDX_Hypertension >= 0,  
     BW_CholTotal >= 0,      
     IMH_TBI >= 0,
-    RAPA_1_Total >= 0,
-    RAPA_2_Total >= 0,
     SocialSupport_Total >= 0,
+    RAPA_1_Total != -9999, 
+    RAPA_2_Total!= -9999, 
     !is.na(BW_CholTotal) & 
     !is.na(CDX_Hypertension) & 
     !is.na(CDX_Diabetes) & 
@@ -152,11 +161,36 @@ filter_habs %>%
 ### Table
 ```{r}
 filter_habs %>% 
-  select(-Med_ID) %>%
+  select(-Med_ID,-RAPA_1_Total,-RAPA_2_Total) %>%
   tbl_summary(by = Race, statistic = list( 
       all_continuous() ~ "{mean} ({sd})",
       all_categorical() ~ "{n} / {N} ({p}%)"
   )) %>%
   add_p()
+```
+###Heatmap
+```{r}
+numeric_data <- filter_habs %>%
+  select(BW_CholTotal, CDX_Depression, CDX_Hypertension, CDX_Diabetes, OM_BMI, IMH_TBI, AUDIT_Total,RAPA_1_Total, RAPA_2_Total, SocialSupport_Total)
+
+# Calculate the correlation matrix
+corr_matrix <- cor(numeric_data, use = "complete.obs", method = "pearson")
+
+# Convert the correlation matrix to a tidy format
+corr_melt <- as.data.frame(as.table(corr_matrix))
+
+# Plot the heatmap using ggplot2
+ggplot(corr_melt, aes(Var1, Var2, fill = Freq)) +
+  geom_tile(color = "white", size = 0.2) +  # Add white borders between tiles
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, 
+                       name = "Correlation") +  # Color gradient for correlations
+  theme_minimal() +  # Minimal theme for clean visualization
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        axis.text.y = element_text(size = 12),  # Adjust y-axis text size
+        axis.title = element_blank(),  # Remove axis titles
+        panel.grid = element_blank(),  # Remove grid lines
+        plot.title = element_text(hjust = 0.5, size = 14, face = "bold")) +  # Title customization
+  labs(title = "Correlation Matrix of Variables")  # Add a clear title
+
 ```
 

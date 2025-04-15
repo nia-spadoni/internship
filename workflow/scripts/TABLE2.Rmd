@@ -17,11 +17,10 @@ setwd("C:/Users/sweat/OneDrive/Documents/Intern")
 getwd()
 ```
 ```{r}
-csv_dir <- "C:\Users\sweat\OneDrive\Documents\Intern\Data\HABSHD-PGS-Scores-selected" 
-csv_files <- list.files(path = csv_dir, full.names = TRUE)
-# Read, merge, and keep only selected columns
+csv_dir <- "C:/Users/sweat/OneDrive/Documents/Intern/Data/HABSHD-PGS-Scores-selected"
+csv_files <- list.files(path = csv_dir, full.names = TRUE, recursive = TRUE)
 habs.raw <- csv_files %>%
-  lapply(read_csv) %>%   # Read all CSV files
+  lapply(read_csv) %>%  
   lapply(select,) %>%
-  bind_rows()  # Bind all rows together into one data frame
+  bind_rows()  
 ```
