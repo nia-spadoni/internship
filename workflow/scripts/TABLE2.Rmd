@@ -16,11 +16,137 @@ library("correlation")
 setwd("C:/Users/sweat/OneDrive/Documents/Intern")
 getwd()
 ```
+###Assigning variables to data
 ```{r}
-csv_dir <- "C:/Users/sweat/OneDrive/Documents/Intern/Data/HABSHD-PGS-Scores-selected"
-csv_files <- list.files(path = csv_dir, full.names = TRUE, recursive = TRUE)
-habs.raw <- csv_files %>%
-  lapply(read_csv) %>%  
-  lapply(select,) %>%
-  bind_rows()  
+education_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Education_Scores.txt",
+                        header = TRUE, sep = "\t")
+print(education_score)
+
+social_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Social_Score.txt",
+                        header = TRUE, sep = "\t")
+print(social_score)
+
+obesity_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Obesity_Score.txt",
+                        header = TRUE, sep = "\t")
+print(obesity_score)
+
+hypertension_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Hypertension_Score.txt",
+                        header = TRUE, sep = "\t")
+print(hypertension_score)
+
+hearing_difficulty_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Hearing_Difficulty_Score.txt",
+                        header = TRUE, sep = "\t")
+print(hearing_difficulty_score)
+
+diabetes_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Diabetes_Score.txt",
+                        header = TRUE, sep = "\t")
+print(diabetes_score)
+
+depression_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Depression_Scores.txt",
+                        header = TRUE, sep = "\t")
+print(depression_score)
+
+exercise_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Daily_Exercise_Scores.txt",
+                        header = TRUE, sep = "\t")
+print(exercise_score)
+
+alcohol_score <- read.table("C:/Users/sweat/OneDrive/Documents/Intern/Scores/Alcohol_Score.txt",
+                        header = TRUE, sep = "\t")
+print(alcohol_score)
+```
+###filter out reference in datasets 
+```{r}
+# filter for education 
+filtered_education_score <- education_score %>%
+  filter(sampleset != "reference")
+print(filtered_education_score)
+
+# filter for social 
+filtered_social_score <- social_score %>%
+  filter(sampleset != "reference")
+print(filtered_social_score)
+
+# filter obesity 
+filtered_obesity_score <- obesity_score %>%
+  filter(sampleset != "reference")
+print(filtered_obesity_score)
+
+#filter for hypertension
+filtered_hypertension_score <- hypertension_score %>%
+  filter(sampleset != "reference")
+print(filtered_hypertension_score)
+
+#filter for hearing difficulty
+filtered_hearing_score <- hearing_difficulty_score %>%
+  filter(sampleset != "reference")
+print(filtered_hearing_score)
+
+#filter for diabetes
+filtered_diabetes_score <- diabetes_score %>%
+  filter(sampleset != "reference")
+print(filtered_diabetes_score)
+
+# filter depression score 
+filtered_depression_score <- depression_score %>%
+  filter(sampleset != "reference")
+print(filtered_depression_score)
+
+# filter exercise score
+filtered_exercise_score <- exercise_score %>%
+  filter(sampleset != "reference")
+print(filtered_exercise_score)
+
+# filter alcohol score
+filtered_alcohol_score <- alcohol_score %>%
+  filter(sampleset != "reference")
+print(filtered_alcohol_score)
+
+```
+###pull out IID and Z2 column
+```{r}
+# education
+IID_Z2_education <- filtered_education_score %>%
+  select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_education)
+
+# social 
+IID_Z2_social <- filtered_social_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_social)
+
+# obesity 
+IID_Z2_obesity <- filtered_obesity_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_obesity)
+
+# hypertension
+IID_Z2_hypertension <- filtered_hypertension_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_hypertension)
+
+# hearing difficulty
+IID_Z2_hearing_difficulty <- filtered_hearing_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_hearing_difficulty)
+
+# diabetes
+IID_Z2_diabetes <- filtered_diabetes_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_diabetes)
+
+# depression 
+IID_Z2_depression <- filtered_depression_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_depression)
+
+# exercise
+IID_Z2_exercise <- filtered_exercise_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_exercise)
+
+# alcohol 
+IID_Z2_alcohol <- filtered_alcohol_score %>%
+   select(-sampleset, -FID, -PGS, -SUM, -Z_MostSimilarPop, -Z_norm1, -percentile_MostSimilarPop)
+print(IID_Z2_alcohol)
+
 ```

@@ -193,4 +193,11 @@ ggplot(corr_melt, aes(Var1, Var2, fill = Freq)) +
   labs(title = "Correlation Matrix of Variables")  # Add a clear title
 
 ```
+```{r}
 
+write_csv(filter_habs, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Clinical dataset/filter_habs.csv")
+
+
+
+
+```
