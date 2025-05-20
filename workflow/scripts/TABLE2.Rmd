@@ -150,3 +150,43 @@ IID_Z2_alcohol <- filtered_alcohol_score %>%
 print(IID_Z2_alcohol)
 
 ```
+### Export data
+```{r}
+# education set 
+write.csv(
+  IID_Z2_education, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/education.csv" 
+)
+# social set 
+write.csv(
+  IID_Z2_social, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/social.csv"
+)
+
+# obesity set 
+write.csv(
+  IID_Z2_obesity, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/obesity.csv"
+)
+# hypertension set 
+write.csv(
+  IID_Z2_hypertension, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/hypertension.csv"
+)
+# hearing difficulty set 
+write.csv(
+  IID_Z2_hearing_difficulty, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/hearingdifficulty.csv"
+)
+# diabetes set 
+write.csv(
+  IID_Z2_diabetes, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/diabetes.csv"
+)
+# depression set 
+write.csv(
+  IID_Z2_depression, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/depression.csv"
+)
+# exercise set 
+write.csv(
+  IID_Z2_exercise, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/exercise.csv"
+)
+# alcohol set 
+write.csv(
+  IID_Z2_alcohol, "C:/Users/sweat/OneDrive/Documents/Intern/Workflow/Genetic dataset/alcohol.csv"
+)
+```
